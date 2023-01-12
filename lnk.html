@@ -1,0 +1,494 @@
+
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<link href="https://fonts.googleapis.com/css?family=Crimson+Text|Roboto" rel="stylesheet">
+		<meta charset="utf-8">
+		<title>Gerardo Furtado | d3.js</title>
+		<style type="text/css">
+
+		body { 
+			background-color: white;
+			font-family: 'Roboto', sans-serif;
+			margin: 0px;
+			padding: 0px;
+		}
+
+		#container {
+			max-width: 1200px;
+			margin-left: auto;
+			margin-right: auto;
+			margin-top: 20px;
+			padding: 1px 10px 10px 10px;
+			background-color: white;
+			box-shadow: 1px 1px 1px 1px #fff;
+			display: flex;
+			flex-wrap: wrap;
+			justify-content: center;
+			padding-top: 20px;
+			padding-bottom: 20px;
+		}
+
+		#topDiv {
+			width: 100%;
+			background-color: #042626;
+		}
+
+		#footDiv {
+			width: 100%;
+			background-color: #042626;
+			margin-bottom: 0px;
+			padding-bottom: 0px;
+		}
+
+		h1 {
+			font-weight: 400;
+			color: gainsboro;
+			text-align: center;
+			font-family: 'Roboto', sans-serif;
+			font-size: 60px;
+			margin-bottom: 10px;
+			margin-top: 0px;
+			padding-top: 30px;
+		}
+
+		h2 {
+			font-weight: 300;
+			font-family: 'Crimson Text', serif;
+			color: #bbb;
+			text-align: center;
+			width: 580px;
+			margin: 0 auto;
+			font-size: 26px;
+			padding-bottom: 20px;
+			margin-top: 20px;
+		}
+
+		h3 {
+			font-weight: 300;
+			font-family: 'Crimson Text', serif;
+			color: #bbb;
+			text-align: center;
+			width: 580px;
+			margin: 0 auto;
+			font-size: 20px;
+			padding-top: 10px;
+		}
+
+		.cellDiv p {
+			font-size: 16px;
+			margin-top: 12px;
+			margin-bottom: 12px;
+			width: 60%;
+			margin-left: auto;
+			margin-right: auto;
+		}
+
+		a {
+			color: powderblue;
+			text-decoration: none;
+		}
+
+		a:hover {
+			color: whitesmoke;
+		}
+
+		.footer {
+			font-size: 12px;
+			margin-top: 0px;
+			margin-bottom: 0px;
+			color: #bbb;
+		}
+
+		#footerDiv {
+			max-width: 1200px;
+			margin-left: auto;
+			margin-right: auto;
+		}
+
+		.cellDiv {
+			text-align: center;
+			vertical-align: top;
+			text-decoration: none;
+		    color: #647381;
+		    font-size:22px;
+		    width: 380px;
+		    margin-top: 20px;
+		    margin-bottom: 20px;
+		}
+
+		@media screen and (min-width: 1200px) {
+			.cellDiv + .cellDiv {
+				border-left: 2px solid lightgray;
+			}
+		}
+
+		.cellDiv a {
+		    text-decoration: none;
+		    color: #647381;
+		    font-size:22px;
+		}
+
+		svg {
+			margin-left: auto;
+			margin-right: auto;
+			display: block;
+		}
+
+		.bars:hover {
+			fill: wheat;
+		}
+
+		.x.axis path {
+			opacity: 0;
+		}
+
+		.x.axis line {
+			stroke:gray;
+		}
+
+		.y.axis line {
+			stroke: #042626;
+			stroke-dasharray: 1,2;
+			opacity: 1;
+		}
+
+		.axis text {
+			fill: gray;
+			font-size: 10px;
+		}
+
+		.scatterxaxis, .scatteryaxis {
+			opacity: 0.25;
+		}
+
+		</style>
+	</head>
+	<body>
+		<div id="topDiv">
+				<div id="svganchor"></div>
+		</div>
+
+	
+		<script src="https://d3js.org/d3.v5.min.js"></script>
+		<script type="text/javascript">
+
+			const colorBrewer = ['#1b9e77','#d95f02','#7570b3','#e7298a','#66a61e','#e6ab02','#a6761d','#666666'];
+
+			let counter = 0;
+
+			createBars();
+
+			createScatter();
+
+			createLine();
+
+			createForce();
+
+			d3.interval(changeColor, 4000);
+
+			function changeColor(){
+				d3.selectAll(".colorNode")
+					.transition()
+					.duration(3000)
+					.style("fill", colorBrewer[counter%colorBrewer.length]);
+				d3.select(".colorPath")
+					.transition()
+					.duration(3000)
+					.style("stroke", colorBrewer[counter%colorBrewer.length]);
+				counter++;
+			};
+
+			function createBars(){
+
+				const width = 580,
+				    height = 150,
+				    padding = [0, 0, 20, 0],
+				    topvalue = 25,
+				    labelx = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+
+				const xScale = d3.scaleBand()
+				    .range([padding[3], width - padding[1]])
+				    .domain(labelx)
+				    .padding(0.2);
+
+				const yScale = d3.scaleLinear()
+				    .range([height - padding[2], padding[0]])
+
+				const xAxis = d3.axisBottom(xScale)
+				    .tickSizeOuter(0);
+
+				const yAxis = d3.axisRight(yScale)
+				    .ticks(5)
+				    .tickSizeInner(-width)
+				    .tickSizeOuter(0);
+
+				const svg = d3.select("#svganchor")
+				    .append("svg")
+				    .attr("width", width)
+				    .attr("height", height);
+
+				const bottomGroup = svg.append("g"),
+					upperGroup = svg.append("g");
+
+				const indices = d3.shuffle(d3.range(0, 1.05, 0.05));
+
+				let counter = 0;
+
+				upperGroup.append("g")
+				    .attr("class", "x axis")
+				    .attr("transform", "translate(0," + (height - padding[2]) + ")")
+				    .call(xAxis);
+
+				upperGroup.append("g")
+				    .attr("class", "y axis")
+				    .attr("transform", "translate(" + (width - (padding[1])) + ",0)")
+				    .call(yAxis);
+
+				function draw() {
+
+				    const bars = bottomGroup.selectAll(".bars")
+				        .data(d3.range(labelx.length).map(function(d){
+				        	return Math.random();
+				        }));
+
+				    bars.enter()
+				        .append("rect")
+				        .attr("x", function(_, i) {
+				            return xScale(labelx[i]);
+				        })
+				        .attr("width", xScale.bandwidth())
+				        .attr("y", height - padding[2])
+				        .attr("height", 0)
+				        .attr("class", "bars")
+				        .merge(bars)
+				        .transition()
+				        .delay(function(_, i) {
+				            return i * 20
+				        })
+				        .duration(200)
+				        .attr("y", function(d) {
+				            return yScale(d)
+				        })
+				        .attr("height", function(d) {
+				            return height - padding[2] - yScale(d)
+				        })
+				        .attr("fill", d3.interpolateCool(indices[(counter++) % indices.length]));
+
+				}
+
+				draw();
+
+				d3.interval(draw, 4000);
+
+			};
+
+			function createScatter(){
+
+				const width = 300,
+				    height = 200,
+				    padding = [6, 8, 22, 24],
+				    radius = 5,
+				    data = d3.range(20).map(function(d, i){
+				    	return {y: 3 + (Math.random()*3 - 1.5) + (i*0.25), x: 1 + i*0.7}
+				    }),
+				    svg = d3.select("#svgportfolio");
+
+				const xScale = d3.scaleLinear()
+					.domain([0, 15])
+				    .range([padding[3], width - padding[1]]);
+
+				const yScale = d3.scaleLinear()
+					.domain([0, 10])
+				    .range([height - padding[2], padding[0]]);
+
+				const xAxis = d3.axisBottom(xScale)
+					.tickValues([2.5, 5, 7.5, 10, 12.5, 15])
+					.tickSizeOuter(0)
+					.tickFormat(function(d){
+						return d % 1 ? null : d;
+					});
+
+				const yAxis = d3.axisLeft(yScale)
+				    .tickValues([2.5, 5, 7.5, 10])
+				    .tickSizeOuter(0)
+				    .tickFormat(function(d){
+						return d % 1 ? null : d;
+					});
+
+				const gX = svg.append("g")
+				    .attr("class", "scatterxaxis")
+				    .attr("transform", "translate(0," + (height - padding[2]) + ")")
+				    .call(xAxis);
+
+				const gY = svg.append("g")
+				    .attr("class", "scatteryaxis")
+				    .attr("transform", "translate(" + padding[3] + ",0)")
+				    .call(yAxis);	
+
+				gX.selectAll("g")
+					.append("line")
+					.attr("x1", 0)
+					.attr("x2", 0)
+					.attr("y1", 0)
+					.attr("y2", -height + padding[0] + padding[2])
+					.style("stroke", "silver")
+					.style("stroke-dasharray", "2, 2");
+
+				gY.selectAll("g")
+					.append("line")
+					.attr("y1", 0)
+					.attr("y2", 0)
+					.attr("x1", 0)
+					.attr("x2", width - padding[1] - padding[3])
+					.style("stroke", "silver")
+					.style("stroke-dasharray", "2, 2");
+
+				const circles = svg.selectAll(null)
+					.data(data)
+					.enter()
+					.append("circle")
+					.attr("class", "colorNode")
+					.attr("cx", function(d){
+						return xScale(d.x)
+					})
+					.attr("cy", function(d){
+						return yScale(d.y)
+					})
+					.attr("r", radius)
+					.style("fill", "#042626")
+					.style("opacity", 1e-6)
+					.transition()
+					.delay(function(_,i){
+						return i * 50;
+					})
+					.style("opacity", 1);			
+
+			};
+
+			function createLine(){
+
+				const width = 300,
+				    height = 200,
+				    padding = [6, 12, 22, 24],
+				    radius = 5,
+				    data = d3.range(20).map(function(d){
+				    	return [{y: Math.min(Math.max(0.5 - (Math.random() * 0.2 - 0.1),0),1), x:2008}];
+				    })
+				    svg = d3.select("#svgdemo");
+
+				data.forEach(function(d){
+					for(let i = 0; i < 10; i++){
+						d.push({y: d[i].y + (Math.random()*0.2 - 0.1), x: 2009 + i})
+					}
+				});
+
+				const xScale = d3.scaleLinear()
+					.domain([2008, 2018])
+				    .range([padding[3], width - padding[1]]);
+
+				const yScale = d3.scaleLinear()
+				    .range([height - padding[2], padding[0]]);
+
+				const xAxis = d3.axisBottom(xScale)
+					.tickSizeOuter(0)
+					.tickValues([2010, 2012, 2014, 2016, 2018])
+					.tickFormat(function(d){
+						return d;
+					});
+
+				const yAxis = d3.axisLeft(yScale)
+					.ticks(5)
+				    .tickSizeOuter(0);
+
+				const gX = svg.append("g")
+				    .attr("class", "scatterxaxis")
+				    .attr("transform", "translate(0," + (height - padding[2]) + ")")
+				    .call(xAxis);
+
+				const gY = svg.append("g")
+				    .attr("class", "scatteryaxis")
+				    .attr("transform", "translate(" + padding[3] + ",0)")
+				    .call(yAxis);	
+
+				var line = d3.line()
+					.x(function(d){
+						return xScale(d.x);
+					})
+					.y(function(d){
+						return yScale(d.y);
+					});
+
+				var paths = svg.selectAll(null)
+					.data(data)
+					.enter()
+					.append("path")
+					.style("fill", "none")
+					.style("stroke-width", function(_, i, n){
+						return i === n.length - 1 ? "2px" : "1px" 
+					})
+					.style("stroke", function(_, i, n){
+						return i === n.length - 1 ? "#042626" : "lightgray" 
+					})
+					.classed("colorPath", function(_, i, n){
+						return i === n.length - 1;
+					})
+					.attr("d", line)
+					.attr("stroke-dasharray", 0)
+					.transition()
+					.duration(1000)
+					.attr("stroke-dasharray", function(){
+						const len = this.getTotalLength();
+						return len + " " + len
+					});
+
+			};
+
+			function createForce(){
+
+				const width = 300,
+				    height = 200,
+				    radius = 5,
+				    nodes = d3.range(50).map(function(d){return {id: d}}),
+				    svg = d3.select("#svgabout");
+
+				const links = d3.range(200).map(function(d, i){
+					return {source: i % 50, target: ~~(Math.random()*50)}
+				});
+
+				const simulation = d3.forceSimulation(nodes)
+					.force("link", d3.forceLink().distance(30).links(links))
+				    .force("charge", d3.forceManyBody())
+				    .force("center", d3.forceCenter(width / 2, height / 2))
+				    .on("tick", tick);
+
+				const lines = svg.selectAll(null)
+					.data(links)
+					.enter()
+					.append("line")
+					.style("stroke", "lightgray")
+					.style("stroke-width", "1px");
+
+				const circles = svg.selectAll(null)
+					.data(nodes)
+					.enter()
+					.append("circle")
+					.attr("class", "colorNode")
+					.attr("r", radius)
+					.style("fill", "#042626");
+
+				function tick(){
+					lines.attr("x1", function(d) { return d.source.x; })
+				        .attr("y1", function(d) { return d.source.y; })
+				        .attr("x2", function(d) { return d.target.x; })
+				        .attr("y2", function(d) { return d.target.y; });
+
+    				circles.attr("cx", function(d) { return d.x = Math.min(Math.max(d.x,5),295); })
+        			.attr("cy", function(d) { return d.y = Math.min(Math.max(d.y, 5), 195); });
+				};
+
+			};
+			
+		</script>
+	</body>
+</html>
